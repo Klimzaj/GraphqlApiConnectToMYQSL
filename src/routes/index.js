@@ -12,6 +12,7 @@ router.post('/players', playerController.create);
 
 router.get('/swords', shopController.allSwords);
 router.get('/shields', shopController.allShields);
+router.post('/shop', shopController.create);
 
 router.get('*',notFoundController.show)
 

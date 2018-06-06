@@ -39,22 +39,30 @@ module.exports = {
         });
     },
 
-    createShield: (req, res, next) => {
+    create: (req, res, next) => {
         let response;
         const name = req.body.name;
-        const d = req.body.d;
+        const dval = req.body.dval;
         const cost = req.body.cost;
         const it = req.body.it;
+        const d = req.body.d;
+
         if (
             typeof name !== 'undefined'
-            && typeof d !== 'undefined'
+            && typeof dval !== 'undefined'
             && typeof cost !== 'undefined'
             && typeof it !== 'undefined'
+            && typeof d !== 'undefined'
         ) {
             var date_id;
             connection.query('INSERT INTO detail_date VALUES ()', [], async (err, result) => {
                 date_id = await result.insertId;
-                connection.query('INSERT INTO ? (name,dmg,cost) VALUES(?,?,?)', [it,name,d,cost], (err, result) => {cosnole.log('error!shop')});
+                // console.log(`INSERT INTO ${it} (name,cost,def,date_id) VALUES (${name,cost,d,date_id})`)
+                connection.query(`INSERT INTO ${it} (name,cost,${d},date_id) VALUES(?,?,?,?)`,
+                [name,Number(cost),Number(dval),date_id], 
+                (err, result) => {
+                    handleSuccessOrErrorMessage(err, result, res);
+                });
             });            
 
         } else {
@@ -68,3 +76,18 @@ module.exports = {
     }
     
 };
+
+function handleSuccessOrErrorMessage(err, result, res) {
+    if (!err){
+        let response;
+        if (result.affectedRows != 0) {
+            response = {'result' : 'success'};
+        } else {
+            response = {'msg' : 'No Result Found'};
+        }
+        res.setHeader('Content-Type', 'application/json');
+        res.status(200).send(JSON.stringify(response));
+    } else {
+        res.status(400).send(err);
+    }
+}
