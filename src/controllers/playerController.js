@@ -2,6 +2,7 @@ import connection from '../config'
 import { graphql, buildSchema } from 'graphql'
 
 const {playersSchema, playersQuery} = require('../schemas/players')(buildSchema);
+const {playersIdSchema, playersIdQuery} = require('../schemas/playersId')(buildSchema);
 const {playerSchema, playerQuery} = require('../schemas/player')(buildSchema);
 const {playersInfoSchema, playersInfoQuery} = require('../schemas/playersInfo')(buildSchema);
 const {idInfoSchema, idInfoQuery} = require('../schemas/idInfo')(buildSchema);
@@ -9,7 +10,43 @@ const {countSchema, countQuery} = require('../schemas/count')(buildSchema);
 
 module.exports = {
 
-    // winCount
+    updateCoins: (req, res) => {
+        let response;
+        const p_id = req.body.p_id;
+        const coin = req.body.coin;
+        if (
+            typeof p_id !== 'undefined'
+            && typeof coin !== 'undefined'
+        ) {
+            connection.query('update detail_player set coin = ? where p_id = ?',
+                [coin, p_id],
+                function(err, result) {
+                    handleSuccessOrErrorMessage(err, result, res);
+                });
+        } else {
+            response = {'result' : name, 'msg' : 'Please fill required information'};
+            res.setHeader('Content-Type', 'application/json');
+            res.send(200, JSON.stringify(response));
+        }
+    },
+
+    allId: (req, res) => {
+        connection.query('select * from detail_player inner join player on p_id=idp inner join detail_date on date_id=iddate where is_delete=false', async (err, rows) => {
+            if (!err) {
+                const response = await graphql(playersIdSchema, playersIdQuery, {playersId: rows});
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(JSON.stringify(
+                    {
+                        'result' : 'success',
+                        'data': response.data.playersId
+                    })
+                );
+            } else {
+                res.status(400).send(err);
+            }
+        });
+    },
+
     winCount: (req, res) => {
         connection.query('select count(*) as ej from game where p1_id = ? and p1_win = 1',
         [req.params.id],
@@ -23,16 +60,12 @@ module.exports = {
                         'data': response.data.counter
                     })
                 );
-                // console.log(response.data)
             } else {
                 res.status(400).send(err);
             }
         });
     },
-    // allCount
     allCount: (req, res) => {
-        // const id = req.body.id;
-        // console.log(id);
         connection.query('select count(*) as ej from game where p1_id = ?',
         [req.params.id], 
         async (err, rows) => {
@@ -83,14 +116,14 @@ module.exports = {
     deleteplayer: (req, res) => {
         let response;
         const id = req.body.id;
-        console.log(id)
+        // console.log(id)
         if (
             typeof id !== 'undefined'
         ) {
             connection.query('update detail_player inner join detail_date on detail_player.date_id=iddate set is_delete = 1, date_delete = (now()) where p_id = ?',
                 [id],
                 function(err, result) {
-                    console.log('edit')
+                    // console.log('edit')
                     handleSuccessOrErrorMessage(err, result, res);
                 });
         } else {
@@ -162,7 +195,7 @@ module.exports = {
         });
     },
     get: (req, res) => {
-        connection.query('SELECT * from player where idp = ?', [req.params.id], async (err, rows) => {
+        connection.query('select * from detail_player inner join player on p_id=idp where idp = ?', [req.params.id], async (err, rows) => {
             const response = await graphql(playerSchema, playerQuery, {player: rows});
             res.setHeader('Content-Type', 'application/json');
             res.status(200).send(JSON.stringify(

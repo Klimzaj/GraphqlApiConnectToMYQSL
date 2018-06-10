@@ -4,8 +4,123 @@ import { graphql, buildSchema } from 'graphql'
 const {swordsSchema, swordsQuery} = require('../schemas/swords')(buildSchema);
 const {shieldsSchema, shieldsQuery} = require('../schemas/shields')(buildSchema);
 const {playerSchema, playerQuery} = require('../schemas/player')(buildSchema);
+const {shoppingSchema, shoppingQuery} = require('../schemas/shopping'   )(buildSchema);
 
 module.exports = {
+
+    // buySword:
+    buySword: (req, res, next) => {   //p_id-> kto kupil  sw_id/sh_id co kupil i id
+        let response;
+        const p_id = req.body.p_id;
+        const sw_id = req.body.sw_id;
+        var date_id;
+        if (
+            typeof p_id !== 'undefined'
+            && typeof sw_id !== 'undefined'
+        ) {
+            connection.query('INSERT INTO detail_date VALUES ()', [], async (err, result) => {
+                date_id = await result.insertId;
+                connection.query(`INSERT INTO shop (p_id,sw_id,date_id) VALUES(?,?,?)`,
+                [p_id,sw_id,date_id], 
+                (err, result) => {
+                    handleSuccessOrErrorMessage(err, result, res);
+                });
+            });            
+
+        } else {
+            response = {
+                'result' : 'error',
+                'msg' : 'Please fill required details'
+            };
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(response));
+        }
+    },
+
+    // buyShield:
+    buyShield: (req, res, next) => {
+        let response;
+        const p_id = req.body.p_id;
+        const sh_id = req.body.sh_id;
+        var date_id;
+        if (
+            typeof p_id !== 'undefined'
+            && typeof sh_id !== 'undefined'
+        ) {
+            connection.query('INSERT INTO detail_date VALUES ()', [], async (err, result) => {
+                date_id = await result.insertId;
+                connection.query(`INSERT INTO shop (p_id,sh_id,date_id) VALUES(?,?,?)`,
+                [p_id,sh_id,date_id], 
+                (err, result) => {
+                    handleSuccessOrErrorMessage(err, result, res);
+                });
+            });            
+
+        } else {
+            response = {
+                'result' : 'error',
+                'msg' : 'Please fill required details'
+            };
+            res.setHeader('Content-Type', 'application/json');
+            res.status(200).send(JSON.stringify(response));
+        }
+    },
+
+    shopping: (req, res) => {
+        connection.query('SELECT * from shop where p_id = ?',
+        [req.params.id]
+        , async (err, rows) => {
+            if (!err) {
+                const response = await graphql(shoppingSchema, shoppingQuery, {shopping: rows});
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(JSON.stringify(
+                    {
+                        'result' : 'success',
+                        'data': response.data
+                    })
+                );
+            } else {
+                res.status(400).send(err);
+            }
+        });
+    },
+    swordId: (req, res) => {
+        connection.query('SELECT * from sword inner join detail_date on iddate=date_id where idsw = ? and is_delete = 0 ',
+        [req.params.id] 
+        , async (err, rows) => {
+            if (!err) {
+                const response = await graphql(swordsSchema, swordsQuery, {swords: rows});
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(JSON.stringify(
+                    {
+                        'result' : 'success',
+                        'data': response.data
+                    })
+                );
+            } else {
+                res.status(400).send(err);
+            }
+        });
+    },
+    shieldId: (req, res) => {
+        connection.query('SELECT * from shield inner join detail_date on iddate=date_id where idsh = ? and is_delete = 0',
+        [req.params.id]
+        , async (err, rows) => {
+            if (!err) {
+                const response = await graphql(shieldsSchema, shieldsQuery, {shields: rows});
+                res.setHeader('Content-Type', 'application/json');
+                res.status(200).send(JSON.stringify(
+                    {
+                        'result' : 'success',
+                        'data': response.data
+                    })
+                );
+            } else {
+                res.status(400).send(err);
+            }
+        });
+    },
+
     allSwords: (req, res) => {
         connection.query('SELECT * from sword inner join detail_date on iddate=date_id', async (err, rows) => {
             if (!err) {

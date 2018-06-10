@@ -17,7 +17,8 @@ module.exports = (buildSchema) => {
           swords {
             name,
             cost,
-            dmg
+            dmg,
+            idsw
           }
         }`
       }

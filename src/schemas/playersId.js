@@ -1,21 +1,20 @@
 module.exports = (buildSchema) => {
     return {
-      playerSchema: buildSchema(`
-        type Player {
+      //doczytac o tym
+      playersIdSchema: buildSchema(`
+        type PlayerId {
           idp: ID
           login: String
-          coin: Int
-
         }
         type Query {
-          player(idp: ID): [Player]
+          playersId(idp: ID): [PlayerId]
         }`
       ),
-      playerQuery: `
+      playersIdQuery: `
         {
-          player {
+          playersId {
+            idp
             login
-            coin
           }
         }`
       }

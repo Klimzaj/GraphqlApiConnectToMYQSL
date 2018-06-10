@@ -1,24 +1,25 @@
 module.exports = (buildSchema) => {
     return {
-      shieldsSchema: buildSchema(`
-        type Shield {
-          idsh: ID
+      swordSchema: buildSchema(`
+        type Sword {
+          idsw: ID
           name: String
           cost: Int
-          def: Int
+          dmg: Int
           date_id: Int
+          dateCreate: String
         }
         type Query {
-          shields(idsh: ID): [Shield]
+          sword(idsw: ID): [Sword]
         }`
       ),
-      shieldsQuery: `
+      swordsQuery: `
         {
-          shields {
+          sword {
             name,
             cost,
-            def,
-            idsh
+            dmg,
+            dateCreate
           }
         }`
       }
